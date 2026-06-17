@@ -438,7 +438,7 @@
         <section id="matriz" style="margin-top: 40px;">
             <h2 style="font-size: 22px; margin-bottom: 20px;">Matriz de Priorização</h2>
             <div class="chart-box">
-                <h3>Tamanho da bolha = valor total de compras (escala corrigida)</h3>
+                <h3>Tamanho da bolha = valor total de compras (escala AMPLIADA)</h3>
                 <canvas id="graficoMatriz"></canvas>
                 <p style="font-size: 14px; color: #64748b; margin-top: 10px;">
                     Eixo X: Participação no total de compras (%) | Eixo Y: Dependência Externa (%)
@@ -471,7 +471,7 @@
 
     <script>
         // =============================================
-        // DADOS COMPLETOS
+        // DADOS COMPLETOS DO JSON ORIGINAL
         // =============================================
         const dadosCompletos = {
             "kpis": {
@@ -488,19 +488,90 @@
                 "crescimento_geral": 37.01
             },
             "setores": [
-                {"cnae": "21.2", "descricao": "Produtos farmacêuticos", "v2023": 588022974.29, "v2025": 886075138.93, "var_pct": 50.7, "dep_2025": 79.4, "detalhes": ["Medicamentos oncológicos", "Hemoderivados", "Vacinas", "Antibióticos", "Imunossupressores"]},
-                {"cnae": "29.1", "descricao": "Automóveis, camionetas e utilitários", "v2023": 216467924.62, "v2025": 506315817.43, "var_pct": 133.9, "dep_2025": 51.5, "detalhes": ["Veículos sedan", "SUV", "Picapes", "Veículos híbridos", "Elétricos"]},
-                {"cnae": "32.5", "descricao": "Instrumentos médicos e odontológicos", "v2023": 383497948.13, "v2025": 367246925.52, "var_pct": -4.2, "dep_2025": 60.4, "detalhes": ["Equipamentos de diagnóstico", "Materiais odontológicos", "Próteses", "Instrumentos cirúrgicos", "Equipamentos de monitoramento"]},
-                {"cnae": "26.2", "descricao": "Equipamentos de informática", "v2023": 124715686.60, "v2025": 166216466.69, "var_pct": 33.3, "dep_2025": 14.3, "detalhes": ["Computadores", "Servidores", "Monitores", "Periféricos", "Equipamentos de rede"]},
-                {"cnae": "28.3", "descricao": "Tratores e máquinas agrícolas", "v2023": 85267587.48, "v2025": 121693315.29, "var_pct": 42.7, "dep_2025": 72.4, "detalhes": ["Tratores", "Colheitadeiras", "Implementos agrícolas", "Sistemas de irrigação", "Plantadeiras"]},
-                {"cnae": "30.4", "descricao": "Fabricação de aeronaves", "v2023": 1360007.14, "v2025": 108571822.64, "var_pct": 7883.2, "dep_2025": 99.9, "detalhes": ["Aeronaves de patrulhamento", "Helicópteros", "Componentes aeronáuticos", "Sistemas de navegação"]},
-                {"cnae": "29.2", "descricao": "Caminhões e ônibus", "v2023": 6010933.94, "v2025": 100210843.00, "var_pct": 1567.1, "dep_2025": 76.1, "detalhes": ["Caminhões", "Ônibus", "Vans", "Carrocerias", "Chassis"]},
-                {"cnae": "21.1", "descricao": "Produtos farmoquímicos", "v2023": 62672494.97, "v2025": 77553396.23, "var_pct": 23.7, "dep_2025": 60.8, "detalhes": ["Insumos farmacêuticos", "Matérias-primas", "Intermediários", "Princípios ativos"]},
-                {"cnae": "14.1", "descricao": "Confecção de vestuário", "v2023": 54537038.02, "v2025": 65230981.45, "var_pct": 19.6, "dep_2025": 26.2, "detalhes": ["Uniforme operacional", "Vestuário profissional", "EPIs", "Fardamentos"]},
-                {"cnae": "27.5", "descricao": "Eletrodomésticos", "v2023": 58572616.44, "v2025": 59741332.12, "var_pct": 2.0, "dep_2025": 67.1, "detalhes": ["Ar-condicionado", "Refrigeradores", "Fogões", "Máquinas de lavar", "Freezers"]},
-                {"cnae": "31.0", "descricao": "Fabricação de móveis", "v2023": 139849065.71, "v2025": 56658471.74, "var_pct": -59.5, "dep_2025": 60.3, "detalhes": ["Móveis para escritório", "Móveis planejados", "Armários", "Cadeiras", "Mesas"]},
-                {"cnae": "26.5", "descricao": "Instrumentos de medida e controle", "v2023": 133102759.63, "v2025": 42369184.63, "var_pct": -68.2, "dep_2025": 86.0, "detalhes": ["Equipamentos de medição", "Instrumentos de teste", "Cronômetros", "Relógios", "Sensores"]},
-                {"cnae": "28.6", "descricao": "Máquinas de uso industrial específico", "v2023": 13292213.06, "v2025": 808445.90, "var_pct": -93.9, "dep_2025": 98.7, "detalhes": ["Máquinas de mineração", "Equipamentos industriais", "Maquinário pesado", "Sistemas de automação"]}
+                {"cnae": "21.2", "descricao": "Fabricação de produtos farmacêuticos", "v2023": 588022974.29, "v2025": 886075138.93, "var_pct": 50.69, "dep_2025": 79.42},
+                {"cnae": "29.1", "descricao": "Fabricação de automóveis, camionetas e utilitários", "v2023": 216467924.62, "v2025": 506315817.43, "var_pct": 133.9, "dep_2025": 51.5},
+                {"cnae": "32.5", "descricao": "Fabricação de instrumentos e materiais para uso médico e odontológico", "v2023": 383497948.13, "v2025": 367246925.52, "var_pct": -4.24, "dep_2025": 60.42},
+                {"cnae": "26.2", "descricao": "Fabricação de equipamentos de informática e periféricos", "v2023": 124715686.60, "v2025": 166216466.69, "var_pct": 33.28, "dep_2025": 14.31},
+                {"cnae": "28.3", "descricao": "Fabricação de tratores e máquinas para agricultura", "v2023": 85267587.48, "v2025": 121693315.29, "var_pct": 42.72, "dep_2025": 72.36},
+                {"cnae": "30.4", "descricao": "Fabricação de aeronaves", "v2023": 1360007.14, "v2025": 108571822.64, "var_pct": 7883.18, "dep_2025": 99.93},
+                {"cnae": "29.2", "descricao": "Fabricação de caminhões e ônibus", "v2023": 6010933.94, "v2025": 100210843.00, "var_pct": 1567.14, "dep_2025": 76.13},
+                {"cnae": "21.1", "descricao": "Fabricação de produtos farmoquímicos", "v2023": 62672494.97, "v2025": 77553396.23, "var_pct": 23.74, "dep_2025": 60.76},
+                {"cnae": "14.1", "descricao": "Confecção de artigos do vestuário e acessórios", "v2023": 54537038.02, "v2025": 65230981.45, "var_pct": 19.61, "dep_2025": 26.18},
+                {"cnae": "27.5", "descricao": "Fabricação de eletrodomésticos", "v2023": 58572616.44, "v2025": 59741332.12, "var_pct": 2.0, "dep_2025": 67.07},
+                {"cnae": "31.0", "descricao": "Fabricação de móveis", "v2023": 139849065.71, "v2025": 56658471.74, "var_pct": -59.49, "dep_2025": 60.28},
+                {"cnae": "32.9", "descricao": "Fabricação de produtos diversos", "v2023": 24266861.55, "v2025": 47127334.79, "var_pct": 94.2, "dep_2025": 82.84},
+                {"cnae": "10.6", "descricao": "Moagem e alimentos para animais", "v2023": 14576644.11, "v2025": 44621709.80, "var_pct": 206.12, "dep_2025": 1.29},
+                {"cnae": "25.5", "descricao": "Equipamento bélico e armas de fogo", "v2023": 27905760.43, "v2025": 43604058.71, "var_pct": 56.25, "dep_2025": 99.91},
+                {"cnae": "26.5", "descricao": "Instrumentos de medida e controle", "v2023": 133102759.63, "v2025": 42369184.63, "var_pct": -68.17, "dep_2025": 86.0},
+                {"cnae": "14,1", "descricao": "Confecção de vestuário (2)", "v2023": 26212385.33, "v2025": 33572508.94, "var_pct": 28.08, "dep_2025": 2.66},
+                {"cnae": "22.2", "descricao": "Produtos de material plástico", "v2023": 15065581.78, "v2025": 31694552.65, "var_pct": 110.38, "dep_2025": 2.1},
+                {"cnae": "28.2", "descricao": "Máquinas e equipamentos de uso geral", "v2023": 34831599.79, "v2025": 30452440.37, "var_pct": -12.57, "dep_2025": 81.05},
+                {"cnae": "17.4", "descricao": "Produtos diversos de papel", "v2023": 24478971.08, "v2025": 20660760.16, "var_pct": -15.6, "dep_2025": 1.7},
+                {"cnae": "32.3", "descricao": "Artefatos para pesca e esporte", "v2023": 9463141.42, "v2025": 20558125.99, "var_pct": 117.24, "dep_2025": 36.68},
+                {"cnae": "27.3", "descricao": "Equipamentos de distribuição elétrica", "v2023": 6276947.70, "v2025": 18239438.42, "var_pct": 190.58, "dep_2025": 64.93},
+                {"cnae": "10.9", "descricao": "Outros produtos alimentícios", "v2023": 12584787.05, "v2025": 17578312.59, "var_pct": 39.68, "dep_2025": 48.06},
+                {"cnae": "62.0", "descricao": "Serviços de tecnologia da informação", "v2023": 4107244.92, "v2025": 16400947.99, "var_pct": 299.32, "dep_2025": 10.48},
+                {"cnae": "58.1", "descricao": "Edição de livros e revistas", "v2023": 8731445.53, "v2025": 15966652.69, "var_pct": 82.86, "dep_2025": 59.43},
+                {"cnae": "26.6", "descricao": "Aparelhos eletromédicos", "v2023": 6425784.18, "v2025": 13459898.36, "var_pct": 109.47, "dep_2025": 98.06},
+                {"cnae": "20.6", "descricao": "Sabões e cosméticos", "v2023": 17918244.81, "v2025": 12163365.51, "var_pct": -32.12, "dep_2025": 1.79},
+                {"cnae": "25.9", "descricao": "Produtos de metal não especificados", "v2023": 6829119.51, "v2025": 12127014.13, "var_pct": 77.58, "dep_2025": 48.06},
+                {"cnae": "13.5", "descricao": "Artefatos têxteis", "v2023": 6257390.67, "v2025": 11890405.28, "var_pct": 90.02, "dep_2025": 76.3},
+                {"cnae": "23.2", "descricao": "Fabricação de cimento", "v2023": 13141254.56, "v2025": 10912412.69, "var_pct": -16.96, "dep_2025": 70.58},
+                {"cnae": "17.2", "descricao": "Papel, cartolina e papel-cartão", "v2023": 9200395.67, "v2025": 9123023.95, "var_pct": -0.84, "dep_2025": 54.9},
+                {"cnae": "25.2", "descricao": "Tanques e caldeiras", "v2023": 1424566.80, "v2025": 8698702.09, "var_pct": 510.62, "dep_2025": 0.0},
+                {"cnae": "11.2", "descricao": "Bebidas não-alcoólicas", "v2023": 7012133.84, "v2025": 8187866.47, "var_pct": 16.77, "dep_2025": 2.07},
+                {"cnae": "29.4", "descricao": "Peças para veículos", "v2023": 2632719.33, "v2025": 8100466.34, "var_pct": 207.68, "dep_2025": 18.76},
+                {"cnae": "20.9", "descricao": "Produtos químicos diversos", "v2023": 10888953.54, "v2025": 7770695.41, "var_pct": -28.64, "dep_2025": 47.88},
+                {"cnae": "32.2", "descricao": "Instrumentos musicais", "v2023": 210877.35, "v2025": 7648286.76, "var_pct": 3526.89, "dep_2025": 94.85},
+                {"cnae": "26.1", "descricao": "Componentes eletrônicos", "v2023": 7459649.45, "v2025": 7573527.37, "var_pct": 1.53, "dep_2025": 35.45},
+                {"cnae": "26.3", "descricao": "Equipamentos de comunicação", "v2023": 3033652.62, "v2025": 7058865.41, "var_pct": 132.69, "dep_2025": 89.09},
+                {"cnae": "22.1", "descricao": "Produtos de borracha", "v2023": 5232134.62, "v2025": 5892364.50, "var_pct": 12.62, "dep_2025": 31.88},
+                {"cnae": "30.1", "descricao": "Construção de embarcações", "v2023": 80600.00, "v2025": 5013861.35, "var_pct": 6120.67, "dep_2025": 98.52},
+                {"cnae": "18.1", "descricao": "Atividade de impressão", "v2023": 6203969.05, "v2025": 5055711.34, "var_pct": -18.51, "dep_2025": 7.25},
+                {"cnae": "19.2", "descricao": "Produtos derivados do petróleo", "v2023": 5984806.63, "v2025": 4020034.71, "var_pct": -32.83, "dep_2025": 49.99},
+                {"cnae": "23.4", "descricao": "Produtos cerâmicos", "v2023": 3067914.57, "v2025": 3819976.66, "var_pct": 24.51, "dep_2025": 1.14},
+                {"cnae": "27.1", "descricao": "Geradores e motores elétricos", "v2023": 3841107.71, "v2025": 3766643.89, "var_pct": -1.94, "dep_2025": 95.93},
+                {"cnae": "26.4", "descricao": "Aparelhos de áudio e vídeo", "v2023": 9995329.78, "v2025": 3599622.88, "var_pct": -63.99, "dep_2025": 68.09},
+                {"cnae": "25.4", "descricao": "Cutelaria e ferramentas", "v2023": 1808805.81, "v2025": 2829777.24, "var_pct": 56.44, "dep_2025": 46.33},
+                {"cnae": "28.1", "descricao": "Motores e compressores", "v2023": 3032615.14, "v2025": 2547808.01, "var_pct": -15.99, "dep_2025": 76.33},
+                {"cnae": "26.7", "descricao": "Instrumentos ópticos", "v2023": 8080290.17, "v2025": 2344963.44, "var_pct": -70.98, "dep_2025": 54.09},
+                {"cnae": "10.1", "descricao": "Abate de produtos de carne", "v2023": 2285301.92, "v2025": 2314737.20, "var_pct": 1.29, "dep_2025": 0.0},
+                {"cnae": "10.5", "descricao": "Laticínios", "v2023": 1879564.12, "v2025": 2251589.43, "var_pct": 19.79, "dep_2025": 0.42},
+                {"cnae": "17.3", "descricao": "Embalagens de papel", "v2023": 2334637.33, "v2025": 2104914.69, "var_pct": -9.84, "dep_2025": 45.11},
+                {"cnae": "25.1", "descricao": "Estruturas metálicas", "v2023": 882877.79, "v2025": 1961109.48, "var_pct": 122.13, "dep_2025": 1.15},
+                {"cnae": "20.1", "descricao": "Produtos químicos inorgânicos", "v2023": 1527313.04, "v2025": 1678492.27, "var_pct": 9.9, "dep_2025": 0.0},
+                {"cnae": "10.3", "descricao": "Conservas de frutas", "v2023": 1561919.04, "v2025": 1555329.24, "var_pct": -0.42, "dep_2025": 0.0},
+                {"cnae": "20.5", "descricao": "Defensivos agrícolas", "v2023": 2831471.17, "v2025": 1463796.43, "var_pct": -48.3, "dep_2025": 1.15},
+                {"cnae": "27.4", "descricao": "Lâmpadas e iluminação", "v2023": 1566851.63, "v2025": 1394296.23, "var_pct": -11.01, "dep_2025": 28.09},
+                {"cnae": "27.9", "descricao": "Equipamentos elétricos diversos", "v2023": 748604.27, "v2025": 1342163.46, "var_pct": 79.29, "dep_2025": 0.33},
+                {"cnae": "20.7", "descricao": "Tintas e vernizes", "v2023": 2960504.28, "v2025": 1209169.70, "var_pct": -59.16, "dep_2025": 0.7},
+                {"cnae": "15.3", "descricao": "Fabricação de calçados", "v2023": 1865335.17, "v2025": 1083679.45, "var_pct": -41.9, "dep_2025": 79.82},
+                {"cnae": "16.2", "descricao": "Produtos de madeira", "v2023": 1295271.89, "v2025": 1021084.09, "var_pct": -21.17, "dep_2025": 0.0},
+                {"cnae": "32.4", "descricao": "Brinquedos e jogos", "v2023": 489924.97, "v2025": 1004909.22, "var_pct": 105.11, "dep_2025": 84.22},
+                {"cnae": "27.2", "descricao": "Pilhas e baterias", "v2023": 985103.86, "v2025": 999605.98, "var_pct": 1.47, "dep_2025": 11.95},
+                {"cnae": "23.1", "descricao": "Vidro e produtos de vidro", "v2023": 1642835.80, "v2025": 943828.49, "var_pct": -42.55, "dep_2025": 1.06},
+                {"cnae": "28.4", "descricao": "Máquinas-ferramenta", "v2023": 156226.03, "v2025": 934026.79, "var_pct": 497.87, "dep_2025": 94.55},
+                {"cnae": "29.3", "descricao": "Cabines e reboques", "v2023": 100100.00, "v2025": 894170.00, "var_pct": 793.28, "dep_2025": 96.41},
+                {"cnae": "23.3", "descricao": "Artefatos de concreto", "v2023": 1425150.82, "v2025": 811765.46, "var_pct": -43.04, "dep_2025": 0.0},
+                {"cnae": "28.6", "descricao": "Máquinas de uso industrial", "v2023": 13292213.06, "v2025": 808445.90, "var_pct": -93.92, "dep_2025": 98.71},
+                {"cnae": "15.2", "descricao": "Artigos de couro", "v2023": 337704.95, "v2025": 718210.54, "var_pct": 112.67, "dep_2025": 74.94},
+                {"cnae": "10.7", "descricao": "Refino de açúcar", "v2023": 817296.53, "v2025": 596417.70, "var_pct": -27.03, "dep_2025": 0.0},
+                {"cnae": "30.9", "descricao": "Equipamentos de transporte diversos", "v2023": 5677139.32, "v2025": 544031.25, "var_pct": -90.42, "dep_2025": 87.22},
+                {"cnae": "13.2", "descricao": "Tecelagem", "v2023": 868416.16, "v2025": 529450.57, "var_pct": -39.03, "dep_2025": 0.0},
+                {"cnae": "01.4", "descricao": "Produção de sementes", "v2023": 393982.36, "v2025": 409363.06, "var_pct": 3.9, "dep_2025": 0.0},
+                {"cnae": "28.5", "descricao": "Máquinas para mineração", "v2023": 136192.20, "v2025": 375875.27, "var_pct": 175.99, "dep_2025": 7.55},
+                {"cnae": "24.4", "descricao": "Metalurgia não-ferrosos", "v2023": 146632.17, "v2025": 244771.35, "var_pct": 66.93, "dep_2025": 20.1},
+                {"cnae": "16.1", "descricao": "Desdobramento de madeira", "v2023": 359334.66, "v2025": 243922.46, "var_pct": -32.12, "dep_2025": 9.07},
+                {"cnae": "08.9", "descricao": "Extração de minerais não-metálicos", "v2023": 0.00, "v2025": 242000.00, "var_pct": 0, "dep_2025": 100.0},
+                {"cnae": "24.2", "descricao": "Siderurgia", "v2023": 404005.30, "v2025": 238602.53, "var_pct": -40.94, "dep_2025": 0.0},
+                {"cnae": "23.9", "descricao": "Aparelhamento de pedras", "v2023": 156901.16, "v2025": 169689.18, "var_pct": 8.15, "dep_2025": 0.0},
+                {"cnae": "10.4", "descricao": "Óleos vegetais e animais", "v2023": 102037.78, "v2025": 97408.30, "var_pct": -4.54, "dep_2025": 0.0},
+                {"cnae": "18.3", "descricao": "Reprodução de materiais gravados", "v2023": 0.00, "v2025": 58016.65, "var_pct": 0, "dep_2025": 0.0},
+                {"cnae": "01.5", "descricao": "Pecuária", "v2023": 0.00, "v2025": 49500.00, "var_pct": 0, "dep_2025": 0.0},
+                {"cnae": "14.2", "descricao": "Malharia e tricotagem", "v2023": 671419.35, "v2025": 47212.26, "var_pct": -92.97, "dep_2025": 69.36},
+                {"cnae": "13.1", "descricao": "Preparação de fibras têxteis", "v2023": 211572.48, "v2025": 23622.54, "var_pct": -88.83, "dep_2025": 0.0},
+                {"cnae": "26.8", "descricao": "Mídias virgens", "v2023": 0.00, "v2025": 1093.66, "var_pct": 0, "dep_2025": 0.0},
+                {"cnae": "11.1", "descricao": "Bebidas alcoólicas", "v2023": 851.92, "v2025": 421.20, "var_pct": -50.56, "dep_2025": 0.0}
             ],
             "ufs": [
                 {"uf": "BA", "total_2023": 626660612.62, "total_2025": 1196032299.00},
@@ -514,30 +585,23 @@
                 {"uf": "PR", "total_2023": 111526180.35, "total_2025": 85058852.22},
                 {"uf": "RJ", "total_2023": 57659182.87, "total_2025": 67848614.15},
                 {"uf": "CE", "total_2023": 30672922.23, "total_2025": 46421504.86},
+                {"uf": "EXTERIOR", "total_2023": 44150300.49, "total_2025": 44778758.77},
                 {"uf": "PE", "total_2023": 50061419.80, "total_2025": 29118214.54},
                 {"uf": "MS", "total_2023": 135793.03, "total_2025": 25039756.90},
                 {"uf": "RN", "total_2023": 961705.72, "total_2025": 13960041.95},
+                {"uf": "NÃO CADASTRADO", "total_2023": 30161683.02, "total_2025": 13229490.30},
                 {"uf": "AL", "total_2023": 2888588.38, "total_2025": 8521651.47},
-                {"uf": "AM", "total_2023": 5959266.46, "total_2025": 4913353.76}
-            ],
-            "secretarias": [
-                {"nome": "Secretaria da Saúde", "total": 1200000000},
-                {"nome": "Secretaria da Educação", "total": 800000000},
-                {"nome": "Secretaria de Infraestrutura", "total": 500000000},
-                {"nome": "Secretaria de Segurança", "total": 300000000},
-                {"nome": "Outras Secretarias", "total": 292332554.59}
-            ],
-            "ufs_fornecedores": [
-                {"uf": "BA", "total": 1196032299},
-                {"uf": "SP", "total": 800815938},
-                {"uf": "MG", "total": 223493124},
-                {"uf": "RS", "total": 126757470},
-                {"uf": "SC", "total": 113453109},
-                {"uf": "GO", "total": 106603372},
-                {"uf": "ES", "total": 88977106},
-                {"uf": "DF", "total": 85294768},
-                {"uf": "PR", "total": 85058852},
-                {"uf": "Outros", "total": 200000000}
+                {"uf": "AM", "total_2023": 5959266.46, "total_2025": 4913353.76},
+                {"uf": "SE", "total_2023": 28147009.53, "total_2025": 4431582.61},
+                {"uf": "MT", "total_2023": 1000122.80, "total_2025": 3427262.00},
+                {"uf": "PB", "total_2023": 13228009.84, "total_2025": 2245258.39},
+                {"uf": "RO", "total_2023": 6938.88, "total_2025": 970470.08},
+                {"uf": "TO", "total_2023": 895388.02, "total_2025": 687447.55},
+                {"uf": "MA", "total_2023": 0.00, "total_2025": 180600.67},
+                {"uf": "PI", "total_2023": 0.00, "total_2025": 69660.00},
+                {"uf": "RR", "total_2023": 0.00, "total_2025": 2675.00},
+                {"uf": "PA", "total_2023": 0.00, "total_2025": 170.64},
+                {"uf": "AP", "total_2023": 92940.00, "total_2025": 0.00}
             ]
         };
 
@@ -604,32 +668,15 @@
         }
 
         // =============================================
-        // MODAL DE DETALHES (Drill-down)
+        // MODAL DE DETALHES
         // =============================================
         function abrirModal(setor) {
             const modal = document.getElementById('modalDetalhes');
             document.getElementById('modalTitle').textContent = setor.descricao;
             document.getElementById('modalSubtitle').textContent = `CNAE: ${setor.cnae} | 2025: R$ ${formatarMoeda(setor.v2025)} | Dependência Externa: ${setor.dep_2025.toFixed(1)}%`;
             
-            let html = '';
-            if (setor.detalhes && setor.detalhes.length > 0) {
-                html += '<h4 style="margin: 15px 0 10px 0; color: #0a4ea3;">Produtos e categorias mais adquiridos:</h4>';
-                setor.detalhes.forEach((item, i) => {
-                    const valor = (setor.v2025 / setor.detalhes.length) * (1 - i * 0.1);
-                    html += `
-                        <div class="modal-item">
-                            <span class="nome">${i+1}. ${item}</span>
-                            <span class="valor">R$ ${formatarMoeda(valor)}</span>
-                        </div>
-                    `;
-                });
-            } else {
-                html = '<p style="color: #64748b;">Nenhum detalhamento disponível para este setor.</p>';
-            }
-            
-            // Adicionar informações adicionais
-            html += `
-                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eef2fb;">
+            let html = `
+                <div style="margin: 15px 0 10px 0;">
                     <div class="modal-item">
                         <span class="nome">Variação 2023→2025</span>
                         <span class="valor" style="color: ${setor.var_pct >= 0 ? '#0e6372' : '#ef4b4c'}">${setor.var_pct >= 0 ? '+' : ''}${setor.var_pct.toFixed(1)}%</span>
@@ -637,6 +684,14 @@
                     <div class="modal-item">
                         <span class="nome">Valor em 2023</span>
                         <span class="valor">R$ ${formatarMoeda(setor.v2023)}</span>
+                    </div>
+                    <div class="modal-item">
+                        <span class="nome">Valor em 2025</span>
+                        <span class="valor">R$ ${formatarMoeda(setor.v2025)}</span>
+                    </div>
+                    <div class="modal-item">
+                        <span class="nome">Dependência Externa</span>
+                        <span class="valor">${setor.dep_2025.toFixed(1)}%</span>
                     </div>
                 </div>
             `;
@@ -687,7 +742,7 @@
             }
             document.getElementById('kpiCrescimento').textContent = `+${kpis.crescimento_geral.toFixed(1)}%`;
 
-            // --- Tabela com clique para drill-down ---
+            // --- Tabela ---
             const tbody = document.getElementById('tbodySetores');
             tbody.innerHTML = '';
             
@@ -718,7 +773,7 @@
                 }
             });
 
-            // --- Gráfico Distribuição (ordenado do maior para o menor) ---
+            // --- Gráfico Distribuição (Top 10) ---
             const top10 = setoresFiltrados.sort((a, b) => b.v2025 - a.v2025).slice(0, 10);
             if (top10.length > 0) {
                 const ctxDist = document.getElementById('graficoDistribuicao').getContext('2d');
@@ -900,7 +955,7 @@
                 });
             }
 
-            // --- Gráfico Dependência Baixa ---
+            // --- Gráfico Dependência Baixa (menor para maior) ---
             const depBaixa = setoresFiltrados
                 .filter(s => s.dep_2025 > 0)
                 .sort((a, b) => a.dep_2025 - b.dep_2025)
@@ -938,8 +993,9 @@
                 });
             }
 
-            // --- Gráficos UF ---
+            // --- Gráficos UF (DADOS CORRETOS) ---
             if (!charts.uf2023) {
+                // Usar os dados reais com as porcentagens corretas
                 const ufTop = ufsProcessados
                     .filter(u => u.uf !== 'EXTERIOR' && u.uf !== 'NÃO CADASTRADO' && u.part_2025 > 0.5)
                     .slice(0, 8);
@@ -995,14 +1051,14 @@
                 }
             }
 
-            // --- Matriz de Priorização (com bolhas de tamanho corrigido) ---
+            // --- Matriz de Priorização (BOLHAS MUITO MAIORES) ---
             const total = setoresFiltrados.reduce((sum, s) => sum + s.v2025, 0);
             const setoresMatriz = setoresFiltrados.filter(s => s.v2025 > 100000);
             
             if (setoresMatriz.length > 0) {
                 const ctxMatriz = document.getElementById('graficoMatriz').getContext('2d');
                 
-                // Calcular valores para escala de bolhas
+                // Calcular valores para escala de bolhas COM TAMANHOS MUITO MAIORES
                 const maxValor = Math.max(...setoresMatriz.map(s => s.v2025));
                 const minValor = Math.min(...setoresMatriz.map(s => s.v2025));
                 
@@ -1013,21 +1069,26 @@
                             label: 'Setores Industriais (tamanho = valor)',
                             data: setoresMatriz.map(s => {
                                 const participacao = total > 0 ? (s.v2025 / total) * 100 : 0;
-                                // Tamanho da bolha com escala logarítmica para melhor visualização
-                                const radius = 8 + Math.sqrt(s.v2025 / maxValor) * 25;
+                                // Escala AMPLIADA: bolhas entre 15 e 60
+                                const logValor = Math.log10(s.v2025);
+                                const logMin = Math.log10(minValor);
+                                const logMax = Math.log10(maxValor);
+                                const normalized = (logValor - logMin) / (logMax - logMin);
+                                const radius = 15 + normalized * 45; // Entre 15 e 60
                                 return {
                                     x: participacao,
                                     y: s.dep_2025 || 0,
                                     r: radius,
                                     label: s.descricao,
-                                    valor: s.v2025
+                                    valor: s.v2025,
+                                    participacao: participacao
                                 };
                             }),
                             backgroundColor: setoresMatriz.map(s => {
                                 const dep = s.dep_2025 || 0;
-                                if (dep > 60) return 'rgba(239, 75, 76, 0.7)';
-                                if (dep > 30) return 'rgba(244, 162, 97, 0.7)';
-                                return 'rgba(14, 99, 114, 0.7)';
+                                if (dep > 60) return 'rgba(239, 75, 76, 0.8)';
+                                if (dep > 30) return 'rgba(244, 162, 97, 0.8)';
+                                return 'rgba(14, 99, 114, 0.8)';
                             }),
                             borderColor: '#fff',
                             borderWidth: 2
@@ -1042,7 +1103,7 @@
                                 callbacks: {
                                     label: (ctx) => {
                                         const p = ctx.raw;
-                                        return `${p.label}: ${p.x.toFixed(1)}% participação, ${p.y.toFixed(1)}% dep. externa, R$ ${formatarMoeda(p.valor)}`;
+                                        return `${p.label}: ${p.participacao.toFixed(1)}% participação, ${p.y.toFixed(1)}% dep. externa, R$ ${formatarMoeda(p.valor)}`;
                                     }
                                 }
                             }
@@ -1066,7 +1127,7 @@
                 });
             }
 
-            // --- Mapa com clique para detalhes da UF ---
+            // --- Mapa ---
             if (mapaInstance) {
                 mapaInstance.remove();
                 mapaInstance = null;
@@ -1118,9 +1179,7 @@
                     <i>Clique para ver detalhes dos setores</i>
                 `);
                 
-                // Adicionar evento de clique para detalhes da UF
                 marker.on('click', function() {
-                    // Mostrar detalhes da UF no modal
                     const setoresUF = setoresProcessados.filter(s => s.v2025 > 1000000).slice(0, 5);
                     const modal = document.getElementById('modalDetalhes');
                     document.getElementById('modalTitle').textContent = `Detalhes - ${uf.uf}`;
@@ -1161,15 +1220,12 @@
             const container = document.getElementById('sankeyContainer');
             container.innerHTML = '';
             
-            // Dados para o Sankey
             const nodes = [
-                // Secretarias (origem)
                 { name: "Secretaria da Saúde", category: "secretaria" },
                 { name: "Secretaria da Educação", category: "secretaria" },
                 { name: "Secretaria de Infraestrutura", category: "secretaria" },
                 { name: "Secretaria de Segurança", category: "secretaria" },
                 { name: "Outras Secretarias", category: "secretaria" },
-                // Setores (meio)
                 { name: "Farmacêuticos", category: "setor" },
                 { name: "Automóveis", category: "setor" },
                 { name: "Instrumentos Médicos", category: "setor" },
@@ -1178,7 +1234,6 @@
                 { name: "Aeronaves", category: "setor" },
                 { name: "Caminhões", category: "setor" },
                 { name: "Outros Setores", category: "setor" },
-                // UFs (destino)
                 { name: "BA", category: "uf" },
                 { name: "SP", category: "uf" },
                 { name: "MG", category: "uf" },
@@ -1187,7 +1242,6 @@
             ];
 
             const links = [
-                // Secretarias → Setores
                 { source: 0, target: 5, value: 400000000 },
                 { source: 0, target: 6, value: 200000000 },
                 { source: 0, target: 7, value: 300000000 },
@@ -1205,7 +1259,6 @@
                 { source: 3, target: 7, value: 50000000 },
                 { source: 3, target: 11, value: 150000000 },
                 { source: 4, target: 11, value: 292332554.59 },
-                // Setores → UFs
                 { source: 5, target: 12, value: 150000000 },
                 { source: 5, target: 13, value: 350000000 },
                 { source: 5, target: 14, value: 100000000 },
@@ -1236,7 +1289,6 @@
                 { source: 11, target: 16, value: 146032299 }
             ];
 
-            // Criar SVG
             const width = container.clientWidth || 700;
             const height = 450;
             
@@ -1257,14 +1309,12 @@
                 links: links.map(d => Object.assign({}, d))
             });
 
-            // Cores
             const colorMap = {
                 'secretaria': '#0a4ea3',
                 'setor': '#0e6372',
                 'uf': '#f4a261'
             };
 
-            // Links
             svg.append("g")
                 .selectAll(".link")
                 .data(sankeyLinks)
@@ -1276,7 +1326,6 @@
                 .attr("stroke-width", d => Math.max(1, d.width))
                 .attr("opacity", 0.3);
 
-            // Nós
             const node = svg.append("g")
                 .selectAll(".node")
                 .data(sankeyNodes)
@@ -1292,7 +1341,6 @@
                 .attr("rx", 4)
                 .style("cursor", "pointer")
                 .on("click", function(event, d) {
-                    // Mostrar detalhes do nó
                     const modal = document.getElementById('modalDetalhes');
                     document.getElementById('modalTitle').textContent = `Detalhes - ${d.name}`;
                     document.getElementById('modalSubtitle').textContent = `Categoria: ${d.category}`;
@@ -1328,7 +1376,6 @@
                 .style("font-family", "Poppins, sans-serif")
                 .style("fill", "#1e293b");
 
-            // Ajustar texto para não cortar
             node.selectAll("text")
                 .attr("x", d => {
                     if (d.x0 < width / 2) {
@@ -1362,12 +1409,10 @@
             document.getElementById('filtroSetor').addEventListener('change', renderizarDashboard);
             document.getElementById('modalClose').addEventListener('click', fecharModal);
             
-            // Fechar modal ao clicar fora
             document.getElementById('modalDetalhes').addEventListener('click', function(e) {
                 if (e.target === this) fecharModal();
             });
 
-            // Redimensionar Sankey
             window.addEventListener('resize', function() {
                 const container = document.getElementById('sankeyContainer');
                 if (container) {
