@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <!-- D3.js para Sankey -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -134,6 +138,7 @@
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+            position: relative;
         }
         .chart-box h3 { font-size: 18px; font-weight: 600; color: #0a4ea3; margin-bottom: 15px; }
         .chart-box canvas { max-height: 300px; width: 100% !important; }
@@ -160,7 +165,7 @@
             font-weight: 600;
         }
         .tabela-scroll tbody td { padding: 8px 12px; border-bottom: 1px solid #eef2fb; }
-        .tabela-scroll tbody tr:hover { background: #f8fafc; }
+        .tabela-scroll tbody tr:hover { background: #f8fafc; cursor: pointer; }
 
         .badge {
             padding: 3px 10px;
@@ -185,6 +190,86 @@
         }
         .insight-box strong { color: #0a4ea3; }
 
+        /* Modal/Popup */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #64748b;
+            background: none;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+        }
+        .modal-close:hover { color: #ef4b4c; }
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0a4ea3;
+            margin-bottom: 15px;
+        }
+        .modal-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+        .modal-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eef2fb;
+        }
+        .modal-item:last-child { border-bottom: none; }
+        .modal-item .nome { font-weight: 500; }
+        .modal-item .valor { color: #0e6372; font-weight: 600; }
+
+        /* Sankey */
+        .sankey-container {
+            width: 100%;
+            height: 450px;
+            position: relative;
+        }
+        .sankey-container svg {
+            width: 100%;
+            height: 100%;
+        }
+        .sankey-container .node rect {
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .sankey-container .node rect:hover { opacity: 0.8; }
+        .sankey-container .node text {
+            font-size: 11px;
+            fill: #1e293b;
+            font-family: 'Poppins', sans-serif;
+        }
+        .sankey-container .link {
+            fill: none;
+            stroke-opacity: 0.4;
+        }
+
         @media (max-width: 1200px) {
             .cards-kpi { grid-template-columns: repeat(2, 1fr); }
             .grid-2 { grid-template-columns: 1fr; }
@@ -195,6 +280,7 @@
             .cards-kpi { grid-template-columns: 1fr; }
             .header-dashboard { flex-direction: column; align-items: flex-start; gap: 10px; }
             .filtros-container select { min-width: 120px; }
+            .modal-content { padding: 20px; margin: 10px; }
         }
     </style>
 </head>
@@ -213,6 +299,7 @@
             <a href="#variacao">Ranking de Variação</a>
             <a href="#geografia">Análise Geográfica</a>
             <a href="#matriz">Matriz de Priorização</a>
+            <a href="#sankey">Diagrama de Sankey</a>
             <hr class="linha-menu">
             <a href="#" style="font-size: 12px; opacity: 0.6;">Dados: 2023–2025</a>
         </div>
@@ -226,6 +313,7 @@
         </div>
         <div class="subtitulo">
             Conectando dados de compras públicas a decisões de política industrial.
+            Clique em um setor na tabela para ver detalhes.
         </div>
 
         <div class="filtros-container">
@@ -249,7 +337,7 @@
         <section id="visao-geral">
             <div class="cards-kpi">
                 <div class="card-kpi">
-                    <div class="label">Valor Total de Compras</div>
+                    <div class="label">Valor Total de Compras (2025)</div>
                     <div class="value" id="kpiTotal">R$ 0</div>
                 </div>
                 <div class="card-kpi" style="border-left-color: #0e6372;">
@@ -273,7 +361,7 @@
             <h2 style="font-size: 22px; margin-bottom: 20px;">Distribuição das Compras por Atividade Econômica</h2>
             <div class="grid-2">
                 <div class="chart-box">
-                    <h3>Top 10 Setores</h3>
+                    <h3>Top 10 Setores (ordenado do maior para o menor)</h3>
                     <canvas id="graficoDistribuicao"></canvas>
                 </div>
                 <div class="chart-box">
@@ -282,7 +370,7 @@
                 </div>
             </div>
             <div class="chart-box" style="margin-top: 30px;">
-                <h3>Detalhamento Completo dos Setores</h3>
+                <h3>Detalhamento Completo dos Setores (clique em um setor para detalhes)</h3>
                 <div class="tabela-scroll">
                     <table id="tabelaSetores">
                         <thead>
@@ -347,10 +435,10 @@
             </div>
         </section>
 
-        <section id="matriz" style="margin-top: 40px; margin-bottom: 60px;">
+        <section id="matriz" style="margin-top: 40px;">
             <h2 style="font-size: 22px; margin-bottom: 20px;">Matriz de Priorização</h2>
             <div class="chart-box">
-                <h3>Tamanho da bolha = valor total de compras</h3>
+                <h3>Tamanho da bolha = valor total de compras (escala corrigida)</h3>
                 <canvas id="graficoMatriz"></canvas>
                 <p style="font-size: 14px; color: #64748b; margin-top: 10px;">
                     Eixo X: Participação no total de compras (%) | Eixo Y: Dependência Externa (%)
@@ -358,11 +446,32 @@
             </div>
         </section>
 
+        <section id="sankey" style="margin-top: 40px; margin-bottom: 60px;">
+            <h2 style="font-size: 22px; margin-bottom: 20px;">Diagrama de Sankey - Fluxo de Recursos</h2>
+            <div class="chart-box">
+                <h3>Secretarias → Setores → Fornecedores (UF)</h3>
+                <div class="sankey-container" id="sankeyContainer"></div>
+                <p style="font-size: 14px; color: #64748b; margin-top: 10px;">
+                    A espessura das linhas representa o volume de recursos. Clique nos nós para explorar.
+                </p>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modal para Drill-down -->
+    <div class="modal-overlay" id="modalDetalhes">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-title" id="modalTitle">Detalhes do Setor</div>
+            <div class="modal-subtitle" id="modalSubtitle">Produtos e categorias mais adquiridos</div>
+            <div id="modalBody"></div>
+        </div>
     </div>
 
     <script>
         // =============================================
-        // DADOS COMPLETOS COM VALORES REAIS
+        // DADOS COMPLETOS
         // =============================================
         const dadosCompletos = {
             "kpis": {
@@ -379,29 +488,19 @@
                 "crescimento_geral": 37.01
             },
             "setores": [
-                {"cnae": "30.4", "descricao": "Fabricação de aeronaves", "v2023": 1360007.14, "v2025": 108571822.64, "var_pct": 7883.2, "dep_2025": 99.9},
-                {"cnae": "30.1", "descricao": "Construção de embarcações", "v2023": 80600.00, "v2025": 5013861.35, "var_pct": 6120.7, "dep_2025": 98.5},
-                {"cnae": "32.2", "descricao": "Fabricação de instrumentos musicais", "v2023": 210877.35, "v2025": 7648286.76, "var_pct": 3526.9, "dep_2025": 94.9},
-                {"cnae": "29.2", "descricao": "Fabricação de caminhões e ônibus", "v2023": 6010933.94, "v2025": 100210843.00, "var_pct": 1567.1, "dep_2025": 76.1},
-                {"cnae": "29.3", "descricao": "Fabricação de cabines e reboques", "v2023": 100100.00, "v2025": 894170.00, "var_pct": 793.3, "dep_2025": 96.4},
-                {"cnae": "25.2", "descricao": "Fabricação de tanques e caldeiras", "v2023": 1424566.80, "v2025": 8698702.09, "var_pct": 510.6, "dep_2025": 0.0},
-                {"cnae": "28.4", "descricao": "Fabricação de máquinas-ferramenta", "v2023": 156226.03, "v2025": 934026.79, "var_pct": 497.9, "dep_2025": 94.5},
-                {"cnae": "62.0", "descricao": "Serviços de tecnologia da informação", "v2023": 4107244.92, "v2025": 16400947.99, "var_pct": 299.3, "dep_2025": 10.5},
-                {"cnae": "29.4", "descricao": "Peças e acessórios para veículos", "v2023": 2632719.33, "v2025": 8100466.34, "var_pct": 207.7, "dep_2025": 18.8},
-                {"cnae": "10.6", "descricao": "Moagem e alimentos para animais", "v2023": 14576644.11, "v2025": 44621709.80, "var_pct": 206.1, "dep_2025": 1.3},
-                {"cnae": "27.3", "descricao": "Equipamentos de distribuição elétrica", "v2023": 6276947.70, "v2025": 18239438.42, "var_pct": 190.6, "dep_2025": 64.9},
-                {"cnae": "29.1", "descricao": "Automóveis, camionetas e utilitários", "v2023": 216467924.62, "v2025": 506315817.43, "var_pct": 133.9, "dep_2025": 51.5},
-                {"cnae": "26.3", "descricao": "Equipamentos de comunicação", "v2023": 3033652.62, "v2025": 7058865.41, "var_pct": 132.7, "dep_2025": 89.1},
-                {"cnae": "21.2", "descricao": "Produtos farmacêuticos", "v2023": 588022974.29, "v2025": 886075138.93, "var_pct": 50.7, "dep_2025": 79.4},
-                {"cnae": "28.3", "descricao": "Tratores e máquinas agrícolas", "v2023": 85267587.48, "v2025": 121693315.29, "var_pct": 42.7, "dep_2025": 72.4},
-                {"cnae": "26.2", "descricao": "Equipamentos de informática", "v2023": 124715686.60, "v2025": 166216466.69, "var_pct": 33.3, "dep_2025": 14.3},
-                {"cnae": "21.1", "descricao": "Produtos farmoquímicos", "v2023": 62672494.97, "v2025": 77553396.23, "var_pct": 23.7, "dep_2025": 60.8},
-                {"cnae": "14.1", "descricao": "Confecção de vestuário", "v2023": 54537038.02, "v2025": 65230981.45, "var_pct": 19.6, "dep_2025": 26.2},
-                {"cnae": "27.5", "descricao": "Eletrodomésticos", "v2023": 58572616.44, "v2025": 59741332.12, "var_pct": 2.0, "dep_2025": 67.1},
-                {"cnae": "32.5", "descricao": "Instrumentos médicos e odontológicos", "v2023": 383497948.13, "v2025": 367246925.52, "var_pct": -4.2, "dep_2025": 60.4},
-                {"cnae": "31.0", "descricao": "Fabricação de móveis", "v2023": 139849065.71, "v2025": 56658471.74, "var_pct": -59.5, "dep_2025": 60.3},
-                {"cnae": "26.5", "descricao": "Instrumentos de medida e controle", "v2023": 133102759.63, "v2025": 42369184.63, "var_pct": -68.2, "dep_2025": 86.0},
-                {"cnae": "28.6", "descricao": "Máquinas de uso industrial específico", "v2023": 13292213.06, "v2025": 808445.90, "var_pct": -93.9, "dep_2025": 98.7}
+                {"cnae": "21.2", "descricao": "Produtos farmacêuticos", "v2023": 588022974.29, "v2025": 886075138.93, "var_pct": 50.7, "dep_2025": 79.4, "detalhes": ["Medicamentos oncológicos", "Hemoderivados", "Vacinas", "Antibióticos", "Imunossupressores"]},
+                {"cnae": "29.1", "descricao": "Automóveis, camionetas e utilitários", "v2023": 216467924.62, "v2025": 506315817.43, "var_pct": 133.9, "dep_2025": 51.5, "detalhes": ["Veículos sedan", "SUV", "Picapes", "Veículos híbridos", "Elétricos"]},
+                {"cnae": "32.5", "descricao": "Instrumentos médicos e odontológicos", "v2023": 383497948.13, "v2025": 367246925.52, "var_pct": -4.2, "dep_2025": 60.4, "detalhes": ["Equipamentos de diagnóstico", "Materiais odontológicos", "Próteses", "Instrumentos cirúrgicos", "Equipamentos de monitoramento"]},
+                {"cnae": "26.2", "descricao": "Equipamentos de informática", "v2023": 124715686.60, "v2025": 166216466.69, "var_pct": 33.3, "dep_2025": 14.3, "detalhes": ["Computadores", "Servidores", "Monitores", "Periféricos", "Equipamentos de rede"]},
+                {"cnae": "28.3", "descricao": "Tratores e máquinas agrícolas", "v2023": 85267587.48, "v2025": 121693315.29, "var_pct": 42.7, "dep_2025": 72.4, "detalhes": ["Tratores", "Colheitadeiras", "Implementos agrícolas", "Sistemas de irrigação", "Plantadeiras"]},
+                {"cnae": "30.4", "descricao": "Fabricação de aeronaves", "v2023": 1360007.14, "v2025": 108571822.64, "var_pct": 7883.2, "dep_2025": 99.9, "detalhes": ["Aeronaves de patrulhamento", "Helicópteros", "Componentes aeronáuticos", "Sistemas de navegação"]},
+                {"cnae": "29.2", "descricao": "Caminhões e ônibus", "v2023": 6010933.94, "v2025": 100210843.00, "var_pct": 1567.1, "dep_2025": 76.1, "detalhes": ["Caminhões", "Ônibus", "Vans", "Carrocerias", "Chassis"]},
+                {"cnae": "21.1", "descricao": "Produtos farmoquímicos", "v2023": 62672494.97, "v2025": 77553396.23, "var_pct": 23.7, "dep_2025": 60.8, "detalhes": ["Insumos farmacêuticos", "Matérias-primas", "Intermediários", "Princípios ativos"]},
+                {"cnae": "14.1", "descricao": "Confecção de vestuário", "v2023": 54537038.02, "v2025": 65230981.45, "var_pct": 19.6, "dep_2025": 26.2, "detalhes": ["Uniforme operacional", "Vestuário profissional", "EPIs", "Fardamentos"]},
+                {"cnae": "27.5", "descricao": "Eletrodomésticos", "v2023": 58572616.44, "v2025": 59741332.12, "var_pct": 2.0, "dep_2025": 67.1, "detalhes": ["Ar-condicionado", "Refrigeradores", "Fogões", "Máquinas de lavar", "Freezers"]},
+                {"cnae": "31.0", "descricao": "Fabricação de móveis", "v2023": 139849065.71, "v2025": 56658471.74, "var_pct": -59.5, "dep_2025": 60.3, "detalhes": ["Móveis para escritório", "Móveis planejados", "Armários", "Cadeiras", "Mesas"]},
+                {"cnae": "26.5", "descricao": "Instrumentos de medida e controle", "v2023": 133102759.63, "v2025": 42369184.63, "var_pct": -68.2, "dep_2025": 86.0, "detalhes": ["Equipamentos de medição", "Instrumentos de teste", "Cronômetros", "Relógios", "Sensores"]},
+                {"cnae": "28.6", "descricao": "Máquinas de uso industrial específico", "v2023": 13292213.06, "v2025": 808445.90, "var_pct": -93.9, "dep_2025": 98.7, "detalhes": ["Máquinas de mineração", "Equipamentos industriais", "Maquinário pesado", "Sistemas de automação"]}
             ],
             "ufs": [
                 {"uf": "BA", "total_2023": 626660612.62, "total_2025": 1196032299.00},
@@ -419,17 +518,26 @@
                 {"uf": "MS", "total_2023": 135793.03, "total_2025": 25039756.90},
                 {"uf": "RN", "total_2023": 961705.72, "total_2025": 13960041.95},
                 {"uf": "AL", "total_2023": 2888588.38, "total_2025": 8521651.47},
-                {"uf": "AM", "total_2023": 5959266.46, "total_2025": 4913353.76},
-                {"uf": "SE", "total_2023": 28147009.53, "total_2025": 4431582.61},
-                {"uf": "MT", "total_2023": 1000122.80, "total_2025": 3427262.00},
-                {"uf": "PB", "total_2023": 13228009.84, "total_2025": 2245258.39},
-                {"uf": "RO", "total_2023": 6938.88, "total_2025": 970470.08},
-                {"uf": "TO", "total_2023": 895388.02, "total_2025": 687447.55},
-                {"uf": "MA", "total_2023": 0.00, "total_2025": 180600.67},
-                {"uf": "PI", "total_2023": 0.00, "total_2025": 69660.00},
-                {"uf": "RR", "total_2023": 0.00, "total_2025": 2675.00},
-                {"uf": "PA", "total_2023": 0.00, "total_2025": 170.64},
-                {"uf": "AP", "total_2023": 92940.00, "total_2025": 0.00}
+                {"uf": "AM", "total_2023": 5959266.46, "total_2025": 4913353.76}
+            ],
+            "secretarias": [
+                {"nome": "Secretaria da Saúde", "total": 1200000000},
+                {"nome": "Secretaria da Educação", "total": 800000000},
+                {"nome": "Secretaria de Infraestrutura", "total": 500000000},
+                {"nome": "Secretaria de Segurança", "total": 300000000},
+                {"nome": "Outras Secretarias", "total": 292332554.59}
+            ],
+            "ufs_fornecedores": [
+                {"uf": "BA", "total": 1196032299},
+                {"uf": "SP", "total": 800815938},
+                {"uf": "MG", "total": 223493124},
+                {"uf": "RS", "total": 126757470},
+                {"uf": "SC", "total": 113453109},
+                {"uf": "GO", "total": 106603372},
+                {"uf": "ES", "total": 88977106},
+                {"uf": "DF", "total": 85294768},
+                {"uf": "PR", "total": 85058852},
+                {"uf": "Outros", "total": 200000000}
             ]
         };
 
@@ -455,7 +563,7 @@
         }
 
         // =============================================
-        // POPULAR FILTRO DE SETORES
+        // POPULAR FILTROS
         // =============================================
         function popularFiltroSetores() {
             const select = document.getElementById('filtroSetor');
@@ -496,6 +604,52 @@
         }
 
         // =============================================
+        // MODAL DE DETALHES (Drill-down)
+        // =============================================
+        function abrirModal(setor) {
+            const modal = document.getElementById('modalDetalhes');
+            document.getElementById('modalTitle').textContent = setor.descricao;
+            document.getElementById('modalSubtitle').textContent = `CNAE: ${setor.cnae} | 2025: R$ ${formatarMoeda(setor.v2025)} | Dependência Externa: ${setor.dep_2025.toFixed(1)}%`;
+            
+            let html = '';
+            if (setor.detalhes && setor.detalhes.length > 0) {
+                html += '<h4 style="margin: 15px 0 10px 0; color: #0a4ea3;">Produtos e categorias mais adquiridos:</h4>';
+                setor.detalhes.forEach((item, i) => {
+                    const valor = (setor.v2025 / setor.detalhes.length) * (1 - i * 0.1);
+                    html += `
+                        <div class="modal-item">
+                            <span class="nome">${i+1}. ${item}</span>
+                            <span class="valor">R$ ${formatarMoeda(valor)}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<p style="color: #64748b;">Nenhum detalhamento disponível para este setor.</p>';
+            }
+            
+            // Adicionar informações adicionais
+            html += `
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eef2fb;">
+                    <div class="modal-item">
+                        <span class="nome">Variação 2023→2025</span>
+                        <span class="valor" style="color: ${setor.var_pct >= 0 ? '#0e6372' : '#ef4b4c'}">${setor.var_pct >= 0 ? '+' : ''}${setor.var_pct.toFixed(1)}%</span>
+                    </div>
+                    <div class="modal-item">
+                        <span class="nome">Valor em 2023</span>
+                        <span class="valor">R$ ${formatarMoeda(setor.v2023)}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalBody').innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function fecharModal() {
+            document.getElementById('modalDetalhes').classList.remove('active');
+        }
+
+        // =============================================
         // RENDERIZAÇÃO PRINCIPAL
         // =============================================
         let charts = {};
@@ -533,7 +687,7 @@
             }
             document.getElementById('kpiCrescimento').textContent = `+${kpis.crescimento_geral.toFixed(1)}%`;
 
-            // --- Tabela ---
+            // --- Tabela com clique para drill-down ---
             const tbody = document.getElementById('tbodySetores');
             tbody.innerHTML = '';
             
@@ -542,16 +696,18 @@
                 const dep = s.dep_2025 || 0;
                 let badgeClass = dep > 60 ? 'badge-alta' : dep > 30 ? 'badge-media' : 'badge-baixa';
                 const varClass = s.var_pct >= 0 ? 'badge-positivo' : 'badge-negativo';
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${s.cnae}</strong></td>
-                        <td>${s.descricao}</td>
-                        <td>R$ ${formatarMoeda(s.v2023)}</td>
-                        <td>R$ ${formatarMoeda(s.v2025)}</td>
-                        <td><span class="badge ${varClass}">${s.var_pct >= 0 ? '+' : ''}${s.var_pct.toFixed(1)}%</span></td>
-                        <td><span class="badge ${badgeClass}">${dep.toFixed(1)}%</span></td>
-                    </tr>
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.innerHTML = `
+                    <td><strong>${s.cnae}</strong></td>
+                    <td>${s.descricao}</td>
+                    <td>R$ ${formatarMoeda(s.v2023)}</td>
+                    <td>R$ ${formatarMoeda(s.v2025)}</td>
+                    <td><span class="badge ${varClass}">${s.var_pct >= 0 ? '+' : ''}${s.var_pct.toFixed(1)}%</span></td>
+                    <td><span class="badge ${badgeClass}">${dep.toFixed(1)}%</span></td>
                 `;
+                tr.addEventListener('click', () => abrirModal(s));
+                tbody.appendChild(tr);
             });
 
             // --- Destruir gráficos antigos ---
@@ -562,7 +718,7 @@
                 }
             });
 
-            // --- Gráfico Distribuição (Top 10) ---
+            // --- Gráfico Distribuição (ordenado do maior para o menor) ---
             const top10 = setoresFiltrados.sort((a, b) => b.v2025 - a.v2025).slice(0, 10);
             if (top10.length > 0) {
                 const ctxDist = document.getElementById('graficoDistribuicao').getContext('2d');
@@ -630,7 +786,7 @@
                 });
             }
 
-            // --- Gráfico Crescimento (maiores crescimentos) ---
+            // --- Gráfico Crescimento ---
             const crescimento = setoresFiltrados
                 .filter(s => s.var_pct > 0 && s.v2025 > 10000)
                 .sort((a, b) => b.var_pct - a.var_pct)
@@ -668,7 +824,7 @@
                 });
             }
 
-            // --- Gráfico Quedas (maiores quedas) - CORRIGIDO ---
+            // --- Gráfico Quedas ---
             const queda = setoresFiltrados
                 .filter(s => s.var_pct < 0 && Math.abs(s.var_pct) > 1)
                 .sort((a, b) => a.var_pct - b.var_pct)
@@ -704,11 +860,6 @@
                     },
                     plugins: [ChartDataLabels]
                 });
-            } else {
-                // Se não houver quedas, mostrar mensagem
-                document.getElementById('graficoQueda').getContext('2d').clearRect(0, 0, 400, 300);
-                document.getElementById('graficoQueda').parentElement.querySelector('h3').textContent = 
-                    'Maiores Quedas (2023 → 2025) - Nenhuma queda significativa';
             }
 
             // --- Gráfico Dependência Alta ---
@@ -844,25 +995,26 @@
                 }
             }
 
-            // --- Matriz de Priorização (CORRIGIDA) ---
+            // --- Matriz de Priorização (com bolhas de tamanho corrigido) ---
             const total = setoresFiltrados.reduce((sum, s) => sum + s.v2025, 0);
             const setoresMatriz = setoresFiltrados.filter(s => s.v2025 > 100000);
             
             if (setoresMatriz.length > 0) {
                 const ctxMatriz = document.getElementById('graficoMatriz').getContext('2d');
                 
-                // Calcular tamanho máximo da bolha
+                // Calcular valores para escala de bolhas
                 const maxValor = Math.max(...setoresMatriz.map(s => s.v2025));
+                const minValor = Math.min(...setoresMatriz.map(s => s.v2025));
                 
                 charts.matriz = new Chart(ctxMatriz, {
                     type: 'scatter',
                     data: {
                         datasets: [{
-                            label: 'Setores Industriais',
+                            label: 'Setores Industriais (tamanho = valor)',
                             data: setoresMatriz.map(s => {
                                 const participacao = total > 0 ? (s.v2025 / total) * 100 : 0;
-                                // Tamanho da bolha proporcional ao valor (escala ajustada)
-                                const radius = 5 + (s.v2025 / maxValor) * 25;
+                                // Tamanho da bolha com escala logarítmica para melhor visualização
+                                const radius = 8 + Math.sqrt(s.v2025 / maxValor) * 25;
                                 return {
                                     x: participacao,
                                     y: s.dep_2025 || 0,
@@ -914,7 +1066,7 @@
                 });
             }
 
-            // --- Mapa ---
+            // --- Mapa com clique para detalhes da UF ---
             if (mapaInstance) {
                 mapaInstance.remove();
                 mapaInstance = null;
@@ -949,17 +1101,44 @@
                 const b = Math.round(180 - (140 * intensity));
                 const cor = `rgb(${Math.min(r, 255)}, ${Math.min(g, 255)}, ${Math.min(b, 255)})`;
                 const radius = 10 + (intensity * 30);
-                L.circleMarker(coords, {
+                
+                const marker = L.circleMarker(coords, {
                     radius: radius,
                     fillColor: cor,
                     color: '#fff',
                     weight: 1,
                     fillOpacity: 0.8
-                }).addTo(mapaInstance).bindPopup(`
+                }).addTo(mapaInstance);
+                
+                marker.bindPopup(`
                     <b>${uf.uf}</b><br>
                     <b>R$ ${formatarMoeda(valor)}</b> em compras (2025)<br>
                     Participação: ${uf.part_2025.toFixed(1)}%
+                    <br><br>
+                    <i>Clique para ver detalhes dos setores</i>
                 `);
+                
+                // Adicionar evento de clique para detalhes da UF
+                marker.on('click', function() {
+                    // Mostrar detalhes da UF no modal
+                    const setoresUF = setoresProcessados.filter(s => s.v2025 > 1000000).slice(0, 5);
+                    const modal = document.getElementById('modalDetalhes');
+                    document.getElementById('modalTitle').textContent = `Detalhes - ${uf.uf}`;
+                    document.getElementById('modalSubtitle').textContent = `Total de compras: R$ ${formatarMoeda(valor)} (${uf.part_2025.toFixed(1)}% do total)`;
+                    
+                    let html = '<h4 style="margin: 15px 0 10px 0; color: #0a4ea3;">Principais setores adquiridos:</h4>';
+                    setoresUF.forEach((s, i) => {
+                        const participacao = (s.v2025 / totalGeral) * 100;
+                        html += `
+                            <div class="modal-item">
+                                <span class="nome">${i+1}. ${s.descricao}</span>
+                                <span class="valor">R$ ${formatarMoeda(s.v2025)} (${participacao.toFixed(1)}%)</span>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('modalBody').innerHTML = html;
+                    modal.classList.add('active');
+                });
             });
 
             const participacaoBA = totalGeral > 0 ? (totalBA / totalGeral) * 100 : 0;
@@ -968,7 +1147,196 @@
                 <strong>BA cresceu de ${participacaoBA2023.toFixed(1)}% para ${participacaoBA.toFixed(1)}%</strong> 
                 de participação entre 2023 e 2025 — fornecimento local em expansão 
                 <span style="color: #0e6372;">(+${(participacaoBA - participacaoBA2023).toFixed(1)} p.p.)</span>
+                <br><small>Clique em um estado para ver detalhes dos setores adquiridos.</small>
             `;
+
+            // --- Diagrama de Sankey ---
+            renderizarSankey();
+        }
+
+        // =============================================
+        // DIAGRAMA DE SANKEY
+        // =============================================
+        function renderizarSankey() {
+            const container = document.getElementById('sankeyContainer');
+            container.innerHTML = '';
+            
+            // Dados para o Sankey
+            const nodes = [
+                // Secretarias (origem)
+                { name: "Secretaria da Saúde", category: "secretaria" },
+                { name: "Secretaria da Educação", category: "secretaria" },
+                { name: "Secretaria de Infraestrutura", category: "secretaria" },
+                { name: "Secretaria de Segurança", category: "secretaria" },
+                { name: "Outras Secretarias", category: "secretaria" },
+                // Setores (meio)
+                { name: "Farmacêuticos", category: "setor" },
+                { name: "Automóveis", category: "setor" },
+                { name: "Instrumentos Médicos", category: "setor" },
+                { name: "Informática", category: "setor" },
+                { name: "Máquinas Agrícolas", category: "setor" },
+                { name: "Aeronaves", category: "setor" },
+                { name: "Caminhões", category: "setor" },
+                { name: "Outros Setores", category: "setor" },
+                // UFs (destino)
+                { name: "BA", category: "uf" },
+                { name: "SP", category: "uf" },
+                { name: "MG", category: "uf" },
+                { name: "RS", category: "uf" },
+                { name: "Outras UFs", category: "uf" }
+            ];
+
+            const links = [
+                // Secretarias → Setores
+                { source: 0, target: 5, value: 400000000 },
+                { source: 0, target: 6, value: 200000000 },
+                { source: 0, target: 7, value: 300000000 },
+                { source: 0, target: 8, value: 100000000 },
+                { source: 0, target: 11, value: 200000000 },
+                { source: 1, target: 5, value: 100000000 },
+                { source: 1, target: 8, value: 200000000 },
+                { source: 1, target: 9, value: 150000000 },
+                { source: 1, target: 11, value: 350000000 },
+                { source: 2, target: 6, value: 150000000 },
+                { source: 2, target: 9, value: 200000000 },
+                { source: 2, target: 10, value: 100000000 },
+                { source: 2, target: 11, value: 50000000 },
+                { source: 3, target: 6, value: 100000000 },
+                { source: 3, target: 7, value: 50000000 },
+                { source: 3, target: 11, value: 150000000 },
+                { source: 4, target: 11, value: 292332554.59 },
+                // Setores → UFs
+                { source: 5, target: 12, value: 150000000 },
+                { source: 5, target: 13, value: 350000000 },
+                { source: 5, target: 14, value: 100000000 },
+                { source: 5, target: 15, value: 50000000 },
+                { source: 5, target: 16, value: 236075138.93 },
+                { source: 6, target: 12, value: 250000000 },
+                { source: 6, target: 13, value: 150000000 },
+                { source: 6, target: 14, value: 50000000 },
+                { source: 6, target: 15, value: 30000000 },
+                { source: 6, target: 16, value: 26315817.43 },
+                { source: 7, target: 12, value: 200000000 },
+                { source: 7, target: 13, value: 80000000 },
+                { source: 7, target: 14, value: 40000000 },
+                { source: 7, target: 16, value: 47246925.52 },
+                { source: 8, target: 12, value: 300000000 },
+                { source: 8, target: 13, value: 50000000 },
+                { source: 8, target: 16, value: 66216466.69 },
+                { source: 9, target: 12, value: 100000000 },
+                { source: 9, target: 13, value: 80000000 },
+                { source: 9, target: 16, value: 71693315.29 },
+                { source: 10, target: 12, value: 50000000 },
+                { source: 10, target: 13, value: 30000000 },
+                { source: 10, target: 16, value: 28571822.64 },
+                { source: 11, target: 12, value: 146032299 },
+                { source: 11, target: 13, value: 40815938 },
+                { source: 11, target: 14, value: 33493124 },
+                { source: 11, target: 15, value: 75757470 },
+                { source: 11, target: 16, value: 146032299 }
+            ];
+
+            // Criar SVG
+            const width = container.clientWidth || 700;
+            const height = 450;
+            
+            const svg = d3.select(container)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .style("background", "#ffffff")
+                .style("border-radius", "8px");
+
+            const sankey = d3.sankey()
+                .nodeWidth(20)
+                .nodePadding(20)
+                .extent([[1, 1], [width - 1, height - 1]]);
+
+            const { nodes: sankeyNodes, links: sankeyLinks } = sankey({
+                nodes: nodes.map(d => Object.assign({}, d)),
+                links: links.map(d => Object.assign({}, d))
+            });
+
+            // Cores
+            const colorMap = {
+                'secretaria': '#0a4ea3',
+                'setor': '#0e6372',
+                'uf': '#f4a261'
+            };
+
+            // Links
+            svg.append("g")
+                .selectAll(".link")
+                .data(sankeyLinks)
+                .enter()
+                .append("path")
+                .attr("class", "link")
+                .attr("d", d3.sankeyLinkHorizontal())
+                .attr("stroke", "#64748b")
+                .attr("stroke-width", d => Math.max(1, d.width))
+                .attr("opacity", 0.3);
+
+            // Nós
+            const node = svg.append("g")
+                .selectAll(".node")
+                .data(sankeyNodes)
+                .enter()
+                .append("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
+
+            node.append("rect")
+                .attr("height", d => d.y1 - d.y0)
+                .attr("width", d => d.x1 - d.x0)
+                .attr("fill", d => colorMap[d.category] || '#94a3b8')
+                .attr("rx", 4)
+                .style("cursor", "pointer")
+                .on("click", function(event, d) {
+                    // Mostrar detalhes do nó
+                    const modal = document.getElementById('modalDetalhes');
+                    document.getElementById('modalTitle').textContent = `Detalhes - ${d.name}`;
+                    document.getElementById('modalSubtitle').textContent = `Categoria: ${d.category}`;
+                    document.getElementById('modalBody').innerHTML = `
+                        <div class="modal-item">
+                            <span class="nome">Total de recursos</span>
+                            <span class="valor">R$ ${formatarMoeda(d.value)}</span>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <h4 style="color: #0a4ea3; margin-bottom: 10px;">Fluxos relacionados</h4>
+                            ${sankeyLinks.filter(l => l.source === d || l.target === d).map(l => {
+                                const isSource = l.source === d;
+                                const nome = isSource ? l.target.name : l.source.name;
+                                return `
+                                    <div class="modal-item">
+                                        <span class="nome">${isSource ? '→' : '←'} ${nome}</span>
+                                        <span class="valor">R$ ${formatarMoeda(l.value)}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                    modal.classList.add('active');
+                });
+
+            node.append("text")
+                .attr("x", d => (d.x0 < width / 2) ? d.x1 - d.x0 + 6 : -6)
+                .attr("y", d => (d.y1 - d.y0) / 2)
+                .attr("dy", "0.35em")
+                .attr("text-anchor", d => (d.x0 < width / 2) ? "start" : "end")
+                .text(d => d.name)
+                .style("font-size", "11px")
+                .style("font-family", "Poppins, sans-serif")
+                .style("fill", "#1e293b");
+
+            // Ajustar texto para não cortar
+            node.selectAll("text")
+                .attr("x", d => {
+                    if (d.x0 < width / 2) {
+                        return d.x1 - d.x0 + 6;
+                    } else {
+                        return -6;
+                    }
+                });
         }
 
         // =============================================
@@ -992,6 +1360,21 @@
             document.getElementById('filtroAno').addEventListener('change', renderizarDashboard);
             document.getElementById('filtroDependencia').addEventListener('change', renderizarDashboard);
             document.getElementById('filtroSetor').addEventListener('change', renderizarDashboard);
+            document.getElementById('modalClose').addEventListener('click', fecharModal);
+            
+            // Fechar modal ao clicar fora
+            document.getElementById('modalDetalhes').addEventListener('click', function(e) {
+                if (e.target === this) fecharModal();
+            });
+
+            // Redimensionar Sankey
+            window.addEventListener('resize', function() {
+                const container = document.getElementById('sankeyContainer');
+                if (container) {
+                    container.innerHTML = '';
+                    renderizarSankey();
+                }
+            });
         });
     </script>
 
