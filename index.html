@@ -671,7 +671,6 @@
                             </div>
                         </div>
                     </div>
-                    <a href="#tab-panorama" class="action-link" onclick="scrollToElement('espaco-atividades')">Qual é o espaço de atividades? ↕</a>
                 </div>
 
                 <!-- Right Table -->
@@ -697,45 +696,12 @@
                 </div>
             </div>
 
-            <!-- Row 3: Detail Panel, Network Graph and Bar Chart -->
-            <div class="grid-layout" id="espaco-atividades">
-                <!-- Left Description -->
-                <div class="card text-panel">
-                    <h2>O que há de único em <strong>Bahia?</strong></h2>
-                    <p>O espaço de atividades de Bahia ilustra a relação de suas especializações e caminhos potenciais para diversificar sua economia, enquanto o gráfico de barras mostra as principais atividades econômicas desenvolvidas pelo território.</p>
-                    <p>Selecione uma barra no gráfico ou busque no campo abaixo para destacar sua posição na rede.</p>
-                    
-                    <div class="filter-group">
-                        <div class="filter-control">
-                            <label>Atividade econômica em destaque</label>
-                            <select id="network-highlight-select" onchange="onNetworkHighlightChange()">
-                                <option value="">Pesquisar por setor...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <a href="https://dataviva.info/pt/help/methodology/space" target="_blank" class="action-link">Como interpretar as redes? ↗</a>
-                </div>
-
-                <!-- Center Network Graph -->
-                <div class="card">
-                    <div class="card-title">Espaço de atividades de Bahia</div>
-                    <div class="viz-container" id="networkGraph">
-                        <!-- D3 Network Appends Here -->
-                    </div>
-                    <div class="map-legend" style="flex-wrap: wrap; gap: 8px;">
-                        <span style="font-size: 11px;">VCR >= 1 • Cores por Grande Setor:</span>
-                        <div style="display: flex; gap: 10px; font-size: 11px;">
-                            <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-green); display: inline-block;"></span> Agro</span>
-                            <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-blue); display: inline-block;"></span> Indústria</span>
-                            <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-orange); display: inline-block;"></span> Serviços</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right RCA Bar Chart -->
+            <!-- Row 3: VCR Bar Chart (alinhado com a tabela de crescimento) -->
+            <div class="grid-2-col" id="espaco-atividades">
+                <div><!-- espaço vazio para alinhamento --></div>
                 <div class="card">
                     <div class="card-title">Atividades econômicas mais especializadas (VCR)</div>
-                    <div class="viz-container" id="barChartContainer">
+                    <div class="viz-container" id="barChartContainer" style="height: 520px;">
                         <canvas id="graficoVCR"></canvas>
                     </div>
                 </div>
@@ -1984,7 +1950,6 @@
             drawBrazilMap();
             drawTreemap();
             renderGrowthTable();
-            drawNetworkGraph();
             drawVcrChart();
         }
 
@@ -2286,152 +2251,7 @@
         // ----------------------------------------------------
         // 4. SPACE OF ACTIVITIES (NETWORK GRAPH)
         // ----------------------------------------------------
-        let spaceNodes = [];
-        let simulation = null;
 
-        function populateHighlightSelect(nodes) {
-            const select = document.getElementById("network-highlight-select");
-            while (select.options.length > 1) select.remove(1);
-            
-            const sortedNodes = [...nodes].sort((a,b) => a.name.localeCompare(b.name));
-            sortedNodes.forEach(node => {
-                const opt = document.createElement("option");
-                opt.value = node.id;
-                opt.textContent = `${node.id} - ${node.name.substring(0, 50)}`;
-                select.appendChild(opt);
-            });
-        }
-
-        function drawNetworkGraph() {
-            const container = d3.select("#networkGraph");
-            container.selectAll("*").remove();
-
-            const width = container.node().clientWidth || 450;
-            const height = 350;
-
-            const svg = container.append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .attr("viewBox", `0 0 ${width} ${height}`)
-                .attr("preserveAspectRatio", "xMidYMid meet");
-
-            spaceNodes = window.dashboardData.space.map(row => {
-                const [class_id, className, gSector, est, workers, rca, divisionID] = row;
-                return {
-                    id: class_id,
-                    name: className,
-                    sector: gSector,
-                    establishments: est,
-                    workers: workers,
-                    rca: rca,
-                    division: divisionID,
-                    radius: 3 + Math.sqrt(Math.max(0, workers)) * 0.08
-                };
-            });
-
-            spaceNodes = spaceNodes.filter(d => d.rca >= 0.5);
-
-            populateHighlightSelect(spaceNodes);
-
-            const divisionHubs = new Map();
-            const links = [];
-
-            spaceNodes.forEach(node => {
-                if (!divisionHubs.has(node.division)) {
-                    divisionHubs.set(node.division, node.id);
-                } else {
-                    links.push({
-                        source: node.id,
-                        target: divisionHubs.get(node.division)
-                    });
-                }
-            });
-
-            const hubIds = Array.from(divisionHubs.values());
-            for (let i = 0; i < hubIds.length - 1; i++) {
-                links.push({
-                    source: hubIds[i],
-                    target: hubIds[i+1]
-                });
-            }
-
-            const linkElements = svg.append("g")
-                .selectAll("line")
-                .data(links)
-                .enter()
-                .append("line")
-                .attr("class", "link-line");
-
-            const nodeElements = svg.append("g")
-                .selectAll("circle")
-                .data(spaceNodes)
-                .enter()
-                .append("circle")
-                .attr("r", d => d.radius)
-                .attr("fill", d => macroSectorColors[d.sector] || "#94a3b8")
-                .attr("class", "node-circle")
-                .on("mouseover", function(event, d) {
-                    const year = parseInt(document.getElementById("filter-rais-year").value) || 2025;
-                    let html = `
-                        <strong>${d.name} (${d.id})</strong><br/>
-                        Setor: ${d.sector}<br/>
-                        VCR/RCA: <strong>${d.rca.toFixed(2)}</strong><br/>
-                        Trabalhadores: ${formatNumber(d.workers)}<br/>
-                        Empresas: ${formatNumber(d.establishments)}
-                    `;
-                    const rais = getRaisDataForSector(d.name);
-                    if (rais) {
-                        html += `<br/><hr style="margin: 6px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.2);"/>`;
-                        html += `Empresas (RAIS ${year}): <strong>${formatNumber(rais.est[year] || 0)}</strong><br/>`;
-                        html += `Empregos (RAIS ${year}): <strong>${formatNumber(rais.vin[year] || 0)}</strong>`;
-                    }
-                    tooltip.style("display", "block").html(html);
-                })
-                .on("mousemove", function(event) {
-                    tooltip.style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 15) + "px");
-                })
-                .on("mouseleave", function() {
-                    tooltip.style("display", "none");
-                })
-                .on("click", function(event, d) {
-                    highlightNodeInNetwork(d.id);
-                    openModal(d.name);
-                });
-
-            simulation = d3.forceSimulation(spaceNodes)
-                .force("link", d3.forceLink(links).id(d => d.id).distance(25))
-                .force("charge", d3.forceManyBody().strength(-10))
-                .force("center", d3.forceCenter(width / 2, height / 2))
-                .force("collision", d3.forceCollide().radius(d => d.radius + 1.5));
-
-            simulation.on("tick", () => {
-                linkElements
-                    .attr("x1", d => d.source.x)
-                    .attr("y1", d => d.source.y)
-                    .attr("x2", d => d.target.x)
-                    .attr("y2", d => d.target.y);
-
-                nodeElements
-                    .attr("cx", d => d.x = Math.max(d.radius, Math.min(width - d.radius, d.x)))
-                    .attr("cy", d => d.y = Math.max(d.radius, Math.min(height - d.radius, d.y)));
-            });
-        }
-
-        function highlightNodeInNetwork(classId) {
-            d3.selectAll(".node-circle")
-                .transition()
-                .duration(300)
-                .attr("r", d => d.id === classId ? d.radius * 2.5 : d.radius)
-                .attr("stroke", d => d.id === classId ? "#0f172a" : "#fff")
-                .attr("stroke-width", d => d.id === classId ? 3 : 1)
-                .attr("opacity", d => !classId || d.id === classId ? 1 : 0.4);
-        }
-
-        function onNetworkHighlightChange() {
-            const val = document.getElementById("network-highlight-select").value;
-            highlightNodeInNetwork(val);
-        }
 
         // ----------------------------------------------------
         // 5. RCA BAR CHART (VCR)
@@ -2449,7 +2269,7 @@
             vcrChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: sortedVcr.map(d => d.class.length > 25 ? d.class.substring(0, 22) + '...' : d.class),
+                    labels: sortedVcr.map(d => d.class),
                     datasets: [{
                         label: 'Índice VCR',
                         data: sortedVcr.map(d => d.rca),
@@ -2489,8 +2309,36 @@
                         }
                     },
                     scales: {
-                        x: { grid: { display: false } },
-                        y: { grid: { display: false } }
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: 'Índice VCR',
+                                font: { size: 11, weight: '600' }
+                            }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 9 },
+                                autoSkip: false,
+                                maxRotation: 0,
+                                callback: function(value, index, ticks) {
+                                    const label = this.getLabelForValue(value);
+                                    if (label.length <= 28) return label;
+                                    const words = label.split(' ');
+                                    const lines = [];
+                                    let line = '';
+                                    for (const word of words) {
+                                        const test = line ? line + ' ' + word : word;
+                                        if (test.length > 28) { lines.push(line); line = word; }
+                                        else { line = test; }
+                                    }
+                                    if (line) lines.push(line);
+                                    return lines;
+                                }
+                            }
+                        }
                     }
                 }
             });
