@@ -1653,6 +1653,7 @@
                 const parts = line.split(';');
                 if (parts.length < 5) continue;
                 const cod = parts[0].trim();
+                if (!cod) continue;
                 const sector = parts[1].trim();
                 const y2025 = parseInt(parts[2].replace(/\./g, '').trim()) || 0;
                 const y2024 = parseInt(parts[3].replace(/\./g, '').trim()) || 0;
@@ -1766,6 +1767,7 @@
             
             const sectors = Object.values(raisMap)
                 .map(d => d.sector)
+                .filter(s => s && s.trim() && !s.startsWith('"') && !s.startsWith(' '))
                 .sort((a, b) => a.localeCompare(b));
                 
             sectors.forEach(s => {
