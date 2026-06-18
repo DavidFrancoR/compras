@@ -902,63 +902,61 @@
                 </div>
             </div>
 
-            <!-- Linha 1: Estrutura (texto) + Top 10 setores + vazio -->
-            <div class="grid-layout">
-                <div class="text-panel">
+            <!-- Linha 1: Estrutura (texto) + Top 10 setores -->
+            <div class="grid-2-col">
+                <div class="card text-panel">
                     <h2>Estrutura das compras p&uacute;blicas na Bahia</h2>
                     <p>
                         Em 2025, as compras p&uacute;blicas na Bahia totalizaram <strong>R$ 3,09 bilh&otilde;es</strong>. Os dez maiores setores concentraram <strong>76%</strong> desse volume, liderados pela fabrica&ccedil;&atilde;o de produtos farmac&ecirc;uticos (R$ 886,1 mi), fabrica&ccedil;&atilde;o de autom&oacute;veis (R$ 506,3 mi), fabrica&ccedil;&atilde;o de instrumentos (R$ 367,2 mi) e fabrica&ccedil;&atilde;o de equipamentos (R$ 166,2 mi).
                     </p>
                     <p><strong>Onde est&aacute; crescendo e caindo a compra p&uacute;blica?</strong></p>
                 </div>
-                <div>
-                    <div class="section-title">Top 10 setores por valor de compras (2025)</div>
-                    <div class="viz-container" style="height:280px;">
+                <div class="card">
+                    <div class="card-title">Top 10 setores por valor de compras (2025)</div>
+                    <div class="viz-container" style="height:400px;">
                         <canvas id="graficoTopSetoresPerfil"></canvas>
                     </div>
                 </div>
-                <div><!-- vazio --></div>
             </div>
 
             <!-- Linha 2: Dinâmica + Ranking de Variação (2 gráficos) -->
-            <div class="grid-layout">
-                <div class="text-panel">
+            <div class="grid-2-col">
+                <div class="card text-panel">
                     <h2>Din&acirc;mica</h2>
                     <p>
                         Entre 2023-2025, as compras p&uacute;blicas na Bahia cresceram <strong>37%</strong>. Setores em crescimento: <span id="setoresCrescimento">X(%), Y(%), Z(%)</span>. Em decrescimento: <span id="setoresQueda">A(%), B(%), C(%)</span>.
                     </p>
                     <p><strong>Essa demanda est&aacute; sendo atendida por fornecedores locais ou est&aacute; vazando para importa&ccedil;&atilde;o e outros estados?</strong></p>
                 </div>
-                <div>
-                    <div class="section-title">Ranking de Varia&ccedil;&atilde;o das Compras P&uacute;blicas</div>
+                <div class="card">
+                    <div class="card-title">Ranking de Varia&ccedil;&atilde;o das Compras P&uacute;blicas</div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                         <div>
-                            <div class="sub-section-title">Maiores Crescimentos (2023 &ndash; 2025)</div>
-                            <div class="viz-container" style="height:200px;">
+                            <div class="card-subtitle">Maiores Crescimentos (2023 &ndash; 2025)</div>
+                            <div class="viz-container" style="height:300px;">
                                 <canvas id="graficoCrescimentoPerfil"></canvas>
                             </div>
                         </div>
                         <div>
-                            <div class="sub-section-title">Maiores Quedas (2023 &ndash; 2025)</div>
-                            <div class="viz-container" style="height:200px;">
+                            <div class="card-subtitle">Maiores Quedas (2023 &ndash; 2025)</div>
+                            <div class="viz-container" style="height:300px;">
                                 <canvas id="graficoQuedaPerfil"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div><!-- vazio --></div>
             </div>
 
             <!-- Linha 3: Fornecedores + Mapa + Gráfico local x externo -->
             <div class="grid-layout">
-                <div class="text-panel">
+                <div class="card text-panel">
                     <h2>Fornecedores</h2>
                     <p>
                         Em 2025, <strong>69,4%</strong> das compras p&uacute;blicas baianas foram atendidas por fornecedores de fora (liderados por S&atilde;o Paulo, 53,1%). Apenas <strong>30,4%</strong> (R$ 1,19 bi) vieram de fornecedores baianos: produtos farmac&ecirc;uticos e m&aacute;quinas e equipamentos lideraram. Essa depend&ecirc;ncia externa evidencia vazamento de demanda p&uacute;blica.
                     </p>
                 </div>
-                <div>
-                    <div class="section-title">Origem dos fornecedores por UF (2025)</div>
+                <div class="card">
+                    <div class="card-title">Origem dos fornecedores por UF (2025)</div>
                     <div class="viz-container viz-container-map" id="mapaCalorPerfil"></div>
                     <div class="map-legend">
                         <span>Baixo</span>
@@ -966,9 +964,9 @@
                         <span>Alto</span>
                     </div>
                 </div>
-                <div>
-                    <div class="section-title">Compras locais (BA) x Externas por setor (2025)</div>
-                    <div class="viz-container" style="height:300px;">
+                <div class="card">
+                    <div class="card-title">Compras locais (BA) x Externas por setor (2025)</div>
+                    <div class="viz-container" style="height:350px;">
                         <canvas id="graficoLocalExternoPerfil"></canvas>
                     </div>
                 </div>
@@ -976,10 +974,10 @@
 
             <!-- Linha 4: Síntese + Tabela (ocupando 2 colunas) -->
             <div class="grid-layout-2col">
-                <div class="text-panel">
+                <div class="card text-panel">
                     <h2>S&iacute;ntese</h2>
                 </div>
-                <div>
+                <div class="card">
                     <div class="table-container">
                         <table id="tabelaSetoresPerfil">
                             <thead>
@@ -2392,7 +2390,7 @@
                 }, 100);
             }
             if (tabName === 'perfil') {
-                setTimeout(renderizarPerfil, 50);
+                setTimeout(renderizarPerfil, 150);
             }
         }
 
@@ -3077,7 +3075,9 @@
             updateKpisAndTooltips();
             processarDadosPerfil();
             popularFiltroSetorPerfil();
-            renderizarPerfil();
+            if (document.getElementById('tab-perfil').classList.contains('active')) {
+                renderizarPerfil();
+            }
         });
     </script>
 
